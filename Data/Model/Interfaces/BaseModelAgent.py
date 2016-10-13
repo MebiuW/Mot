@@ -1,5 +1,13 @@
+# coding:utf-8
 import pickle
 class BaseModel:
+
+    def init(self):
+        '''
+        开始使用这个模型
+        :return:
+        '''
+        pass
 
     def train(self,qa_records):
         '''

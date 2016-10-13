@@ -1,3 +1,4 @@
+# coding:utf-8
 from Data.Model.Interfaces.BaseModelAgent import BaseModel
 
 class HWModel(BaseModel):

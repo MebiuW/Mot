@@ -1,5 +1,7 @@
+# coding:utf-8
 from Data.Model.Interfaces.BaseModelAgent import BaseModel
-import jieba
+from Corpus.Model.Sentence2Vector import sen2vec
+from Corpus.Model.Similarity import cossim
 
 class SenSimModel(BaseModel):
     # 分词后的所有词典[词典->位置]
@@ -51,6 +53,11 @@ class SenSimModel(BaseModel):
 
 
     def __DoWordEmbeddingTraining(self):
+        '''
+        使用word2vec训练
+        :return:
+        '''
+
         pass
 
     def __DoVectorCreater(self):
@@ -64,7 +71,7 @@ class SenSimModel(BaseModel):
         :param qa_records:
         :return:
         '''
-        super().train(qa_records)
+        super.train(qa_records)
         # 首先将其转换为可以识别的格式
         self.__DoStructureTrans(qa_records)
         # 然后分词 构建词典
@@ -74,3 +81,31 @@ class SenSimModel(BaseModel):
         # 然后进行向量生成训练
         self.__DoVectorCreater()
         #完成训练
+
+    def retrieve(self,question,k):
+        vector1 = sen2vec(question)
+        input = open(r'C:\Users\72770\PycharmProjects\Crawler\JDQATemp\iphone6s-record-qa.txt', 'r')
+        # 问题
+        line = input.readline()
+        max_sim = -1
+        max_answer = '这个问题我不太理解，换个问法试试？'
+        while line != 'EOF' and len(line) > 0:
+            try:
+                # 答案对
+                answer = input.readline()
+                if len(answer) < 10:
+                    continue
+                line = line[8:]
+                vector2 = sen2vec(str(line))
+                if vector2 is None:
+                    continue
+                cosV12 = cossim(vector1, vector2)
+                if cosV12 > max_sim:
+                    max_sim = cosV12
+                    max_answer = answer
+            except Exception as e:
+                pass
+                print('Some Error' + str(e))
+            finally:
+                line = input.readline()
+        return str(max_answer)

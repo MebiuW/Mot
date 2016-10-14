@@ -16,6 +16,10 @@ class RawQAPair():
         self.question = question
         self.answer = answer
         self.lang_type = lang_type
+        # 规范化,去除回车
+        self.question.strip()
+        self.answer.strip()
+        self.question.replace('\n','<MBOT-SPACE>')
 
         def __str__(self):
             return '<' + self.question + ',' + self.answer + '>'

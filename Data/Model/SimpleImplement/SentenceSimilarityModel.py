@@ -2,6 +2,10 @@
 from Data.Model.Interfaces.BaseModelAgent import BaseModel
 from Corpus.Model.Sentence2Vector import sen2vec
 from Corpus.Model.Similarity import cossim
+import gensim
+from gensim.models.word2vec import LineSentence
+import jieba
+
 
 class SenSimModel(BaseModel):
     # 分词后的所有词典[词典->位置]
@@ -33,7 +37,7 @@ class SenSimModel(BaseModel):
         :param qa_records:
         :return:
         '''
-        writer = open(self.model_position,'w+')
+        writer = open(self.model_position+r'/seg.txt','a+')
         for qa in self.res:
             self.res[qa]['context_tokens'] = jieba.lcut(self.res[qa]['context'])
             self.res[qa]['response_tokens'] = jieba.lcut(self.res[qa]['response'])
@@ -57,10 +61,24 @@ class SenSimModel(BaseModel):
         使用word2vec训练
         :return:
         '''
+        #新的语料库
+        new_corpus = LineSentence('corpus/iphone6sreview-seg.txt')
+        print ('======= Training Word2Vec Model =======')
+        model = gensim.models.Word2Vec(new_corpus, workers=8)
+        print ('======= Saving Word2Vec Model =======')
+        model.save(self.model_position+'/w2v.model')
+        print ('======= Finished Word2Vec Traning =======')
+        self.model = model
 
-        pass
 
     def __DoVectorCreater(self):
+        '''
+        将已有的问句和回答都转变为Vector
+        :return:
+        '''
+        for qa in self.res:
+            self.res[qa.question]['question_vector'] = [0,0]
+            self.res[qa.question]['answer_vector'] = [0,0]
         pass
 
 
@@ -109,3 +127,5 @@ class SenSimModel(BaseModel):
             finally:
                 line = input.readline()
         return str(max_answer)
+
+    def update(self,qa_records):

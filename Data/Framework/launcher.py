@@ -4,10 +4,11 @@ import string,os,sys
 from Data.Model.Interfaces.BaseModelAgent import BaseModel
 from Data.Model.SimpleImplement.HelloWorldModel import HWModel
 from Data.Model.SimpleImplement.SentenceSimilarityModel import SenSimModel
+from Data.Model.SimpleImplement import  SentenceSimilarityModel
 import datetime
 mode = 'r'
 
-model = SenSimModel('')
+model = SentenceSimilarityModel.load_model(r'C:/Users/72770/Documents/Chatbot/Model/SenHWModel/')
 
 if __name__ =='__main__':
     print('Hello ~ Welcome!')
@@ -16,5 +17,5 @@ if __name__ =='__main__':
         if inputs == 'end':
             break
         start_time = datetime.datetime.now().microsecond
-        print('Mbot:' + model.retrieve(inputs,1))
+        print('Mbot:' + str(model.retrieve(inputs.decode('utf-8'),1).encode('utf-8')))
 

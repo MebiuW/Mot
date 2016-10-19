@@ -1,3 +1,4 @@
+# coding:utf-8
 '''
 一个RawRecord记录一个文件
 '''
@@ -19,7 +20,10 @@ class RawQAPair():
         # 规范化,去除回车
         self.question.strip()
         self.answer.strip()
-        self.question.replace('\n','<MBOT-SPACE>')
+        self.question = self.question.replace('\r','')
+        self.answer = self.answer.replace('\r','')
+        self.answer = self.answer.replace('\n','')
+        self.question = self.question.replace('\n','')
 
         def __str__(self):
             return '<' + self.question + ',' + self.answer + '>'
@@ -55,8 +59,6 @@ class RawRecord():
 
     def getLangType(self):
         return self.type
-
-
 
 
 def save(file,rawRecord):

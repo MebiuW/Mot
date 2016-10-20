@@ -7,6 +7,8 @@ from Data.Model.Interfaces.Record.RawRecordAgent import *
 import jieba
 import codecs
 import json
+import numpy as np
+
 
 
 class SenSimModel(BaseModel):
@@ -14,6 +16,8 @@ class SenSimModel(BaseModel):
     tokens = dict()
     # 分词后所有词的词频
     tokens_fre = dict()
+    #IDF
+    idf = dict()
     # 所有词的数目
     word_count = 0
 
@@ -58,10 +62,18 @@ class SenSimModel(BaseModel):
                     self.tokens_fre[token] = 0
                 self.tokens_fre[token] = self.tokens_fre[token] + 1
             self.word_count = self.word_count + len(tokens)
+            #IDF 值
+            for token in set(tokens):
+                # 设置好IDF
+                if token not in self.idf.keys():
+                    self.idf[token] = 0
+                self.idf[token] = self.idf[token] + 1
         v_writer = open(self.model_position + r'/vocabulary.txt', 'w+')
         v_writer.write(json.dumps(self.tokens))
         v_writer = open(self.model_position + r'/vocabulary_fre.txt', 'w+')
         v_writer.write(json.dumps(self.tokens_fre))
+        v_writer = open(self.model_position + r'/idf.txt', 'w+')
+        v_writer.write(json.dumps(self.idf))
 
 
     def __DoWordEmbeddingTraining(self):
@@ -77,8 +89,8 @@ class SenSimModel(BaseModel):
         model.train(response_corpus)
         tmp_corpus = LineSentence(r'C:/Users/72770/Documents/Chatbot/Corpus/Noah Weibo/stc_weibo_train_post')
         tmp_corpus2 = LineSentence(r'C:\Users\72770\Documents\Chatbot\Corpus\Noah Weibo\stc_weibo_train_response')
-        model.train(tmp_corpus)
-        model.train(tmp_corpus2)
+        # model.train(tmp_corpus)
+        # model.train(tmp_corpus2)
         print ('======= Saving Word2Vec Model =======')
         model.save(self.model_position+'/w2v.model')
         print ('======= Finished Word2Vec Traning =======')
@@ -96,14 +108,15 @@ class SenSimModel(BaseModel):
         for qa in self.res:
             vector = []
             for token in self.res[qa]['context']:
-                if token in self.model:
+                if token in self.model and self.idf[token] < 20:
                     vector.append(self.model[token])
-            self.res[qa]['context_vector'] = vector
+            # 这里的Shape是n*100
+            self.res[qa]['context_vector'] = np.array(vector)
             vector = []
             for token in self.res[qa]['response']:
-                if token in self.model:
+                if token in self.model and self.idf[token] < 20:
                     vector.append(self.model[token])
-            self.res[qa]['response_Vector'] = vector
+            self.res[qa]['response_Vector'] = np.array(vector)
         print ('======= Saving Model =======')
         pickle.dump(self,m_writer)
 
@@ -130,12 +143,14 @@ class SenSimModel(BaseModel):
         for token in tokens:
             if token in self.model:
                 vecs.append(self.model[token])
-        return vecs
+        return np.array(vecs)
+
     def __SenSim(self,vec_of_tokens1,vec_of_tokens2):
         result = 0
         if len(vec_of_tokens1) == 0 or len(vec_of_tokens2) == 0:
             return result
         for i, vector1 in enumerate(vec_of_tokens1):
+            # TODO 使用矩阵改善这里
             result = result + max(
                 [cossim(vector1, vector2) for vector2 in vec_of_tokens2]) / (0.0 + len(vec_of_tokens1))
         return result
